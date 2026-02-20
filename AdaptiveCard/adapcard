@@ -1,0 +1,261 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+        {
+            "type": "Container",
+            "style": "emphasis",
+            "items": [
+                {
+                    "type": "ColumnSet",
+                    "columns": [
+                        {
+                            "type": "Column",
+                            "width": "auto",
+                            "items": [
+                                {
+                                    "type": "Image",
+                                    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/ASML_Holding_N.V._logo.svg/200px-ASML_Holding_N.V._logo.svg.png",
+                                    "size": "Small",
+                                    "width": "80px"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "EHS Ireland - ISP Approval Request",
+                                    "weight": "Bolder",
+                                    "size": "Medium",
+                                    "wrap": true
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": "Integrated Safety Plan requires your approval",
+                                    "spacing": "None",
+                                    "isSubtle": true,
+                                    "wrap": true
+                                }
+                            ],
+                            "verticalContentAlignment": "Center"
+                        }
+                    ]
+                }
+            ],
+            "bleed": true
+        },
+        {
+            "type": "TextBlock",
+            "text": "Hey ${approverName},",
+            "weight": "Bolder",
+            "spacing": "Medium"
+        },
+        {
+            "type": "TextBlock",
+            "text": "A new Integrated Safety Plan has been submitted and requires your review and approval.",
+            "wrap": true,
+            "spacing": "None",
+            "isSubtle": true
+        },
+        {
+            "type": "Container",
+            "items": [
+                {
+                    "type": "ColumnSet",
+                    "columns": [
+                        {
+                            "type": "Column",
+                            "width": "auto",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "${planId}",
+                                    "weight": "Bolder",
+                                    "size": "ExtraLarge",
+                                    "color": "Accent"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "auto",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "${version}",
+                                    "weight": "Lighter",
+                                    "size": "Medium",
+                                    "isSubtle": true
+                                }
+                            ],
+                            "verticalContentAlignment": "Center"
+                        },
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "${riskLevel} Risk",
+                                    "weight": "Bolder",
+                                    "color": "${if(riskLevel == 'High', 'Attention', if(riskLevel == 'Medium', 'Warning', 'Good'))}",
+                                    "horizontalAlignment": "Right"
+                                }
+                            ],
+                            "verticalContentAlignment": "Center"
+                        }
+                    ]
+                }
+            ],
+            "spacing": "Medium"
+        },
+        {
+            "type": "TextBlock",
+            "text": "${taskName}",
+            "weight": "Bolder",
+            "size": "Medium",
+            "wrap": true,
+            "spacing": "Small"
+        },
+        {
+            "type": "FactSet",
+            "facts": [
+                {
+                    "title": "Submitted By:",
+                    "value": "${leadName}"
+                },
+                {
+                    "title": "Location:",
+                    "value": "${location}"
+                },
+                {
+                    "title": "Machine:",
+                    "value": "${machineNumber}"
+                },
+                {
+                    "title": "Shift:",
+                    "value": "${shift}"
+                },
+                {
+                    "title": "Date:",
+                    "value": "${date}"
+                },
+                {
+                    "title": "System:",
+                    "value": "${system}"
+                }
+            ],
+            "spacing": "Medium"
+        },
+        {
+            "type": "Container",
+            "style": "accent",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "text": "Team Engineers",
+                    "weight": "Bolder",
+                    "size": "Small"
+                },
+                {
+                    "type": "TextBlock",
+                    "text": "${engineers}",
+                    "wrap": true,
+                    "spacing": "None"
+                }
+            ],
+            "spacing": "Medium"
+        },
+        {
+            "type": "Container",
+            "style": "attention",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "text": "Safety Flags (${safetyFlagsCount})",
+                    "weight": "Bolder",
+                    "size": "Small"
+                },
+                {
+                    "type": "TextBlock",
+                    "text": "${safetyFlagsList}",
+                    "wrap": true,
+                    "spacing": "None"
+                }
+            ],
+            "spacing": "Medium"
+        },
+        {
+            "type": "Container",
+            "style": "warning",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "text": "Identified Hazards (${hazardsCount})",
+                    "weight": "Bolder",
+                    "size": "Small"
+                },
+                {
+                    "type": "FactSet",
+                    "facts": [
+                        {
+                            "title": "Mechanical",
+                            "value": "Risk: 6 | Mitigation: Use proper PPE and follow lockout procedures"
+                        },
+                        {
+                            "title": "Electrical",
+                            "value": "Risk: 8 | Mitigation: Verify zero energy state before work"
+                        },
+                        {
+                            "title": "Chemical Exposure",
+                            "value": "Risk: 4 | Mitigation: Use fume hood and wear gloves"
+                        }
+                    ],
+                    "spacing": "Small"
+                }
+            ],
+            "spacing": "Medium",
+            "bleed": true
+        },
+        {
+            "type": "Input.Text",
+            "id": "approverComments",
+            "placeholder": "Add comments (optional)",
+            "isMultiline": true,
+            "spacing": "Medium"
+        }
+    ],
+    "actions": [
+        {
+            "type": "Action.Submit",
+            "title": "Approve",
+            "style": "positive",
+            "id": "approve",
+            "data": {
+                "action": "approve",
+                "planId": "${planId}",
+                "version": "${version}"
+            }
+        },
+        {
+            "type": "Action.Submit",
+            "title": "Reject",
+            "style": "destructive",
+            "id": "reject",
+            "data": {
+                "action": "reject",
+                "planId": "${planId}",
+                "version": "${version}"
+            }
+        },
+        {
+            "type": "Action.OpenUrl",
+            "title": "View Full Plan",
+            "url": "https://your-app-url.replit.app/plan/${planId}"
+        }
+    ]
+}

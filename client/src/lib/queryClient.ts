@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { staticData } from "./staticData";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -29,6 +30,21 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Check if we're in static mode (GitHub Pages)
+    const isStatic = window.location.hostname.includes('github.io');
+
+    if (isStatic) {
+      // Return static data for GitHub Pages
+      const path = queryKey.join('/') as string;
+      if (path === '/api/safety-plans') return staticData.safetyPlans as T;
+      if (path === '/api/permits') return staticData.permits as T;
+      if (path === '/api/crane-inspections') return staticData.craneInspections as T;
+      if (path === '/api/draeger-calibrations') return staticData.draegerCalibrations as T;
+      if (path === '/api/incidents') return staticData.incidents as T;
+      if (path === '/api/documents') return staticData.documents as T;
+      return [] as T;
+    }
+
     const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
     });

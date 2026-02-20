@@ -7,7 +7,7 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  base: '/ehsbeta/',
+  base: process.env.GITHUB_PAGES === 'true' ? '/ehsbeta/' : '/',
   plugins: [
     react(),
     runtimeErrorOverlay(),

@@ -7,6 +7,7 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  base: '/ehsbeta/',
   plugins: [
     react(),
     runtimeErrorOverlay(),
@@ -33,6 +34,17 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'wouter'],
+          ui: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tooltip'],
+          query: ['@tanstack/react-query'],
+          utils: ['clsx', 'tailwind-merge', 'date-fns'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
   },
   optimizeDeps: {
     exclude: ["lucide-react"],

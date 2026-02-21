@@ -763,8 +763,8 @@ export class DatabaseStorage implements IStorage {
     return p;
   }
   async deletePermit(id: number) {
-    const result = await db.delete(permits).where(eq(permits.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const result = await db.delete(permits).where(eq(permits.id, id)).returning();
+    return result.length > 0;
   }
 
   // ── Crane Inspections ──────────────────────────────────────────────────────
@@ -784,8 +784,8 @@ export class DatabaseStorage implements IStorage {
     return r;
   }
   async deleteCraneInspection(id: number) {
-    const result = await db.delete(craneInspections).where(eq(craneInspections.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const result = await db.delete(craneInspections).where(eq(craneInspections.id, id)).returning();
+    return result.length > 0;
   }
 
   // ── Draeger Calibrations ───────────────────────────────────────────────────
@@ -805,8 +805,8 @@ export class DatabaseStorage implements IStorage {
     return r;
   }
   async deleteDraegerCalibration(id: number) {
-    const result = await db.delete(draegerCalibrations).where(eq(draegerCalibrations.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const result = await db.delete(draegerCalibrations).where(eq(draegerCalibrations.id, id)).returning();
+    return result.length > 0;
   }
 
   // ── Incidents ──────────────────────────────────────────────────────────────
@@ -826,8 +826,8 @@ export class DatabaseStorage implements IStorage {
     return r;
   }
   async deleteIncident(id: number) {
-    const result = await db.delete(incidents).where(eq(incidents.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const result = await db.delete(incidents).where(eq(incidents.id, id)).returning();
+    return result.length > 0;
   }
 
   // ── Documents ──────────────────────────────────────────────────────────────
@@ -847,12 +847,12 @@ export class DatabaseStorage implements IStorage {
     return r;
   }
   async deleteDocument(id: number) {
-    const result = await db.delete(documents).where(eq(documents.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const result = await db.delete(documents).where(eq(documents.id, id)).returning();
+    return result.length > 0;
   }
 }
 
 const useDatabase = process.env.USE_DATABASE === "true";
 export const storage: IStorage = useDatabase ? new DatabaseStorage() : new MemStorage();
 
-console.log(`Storage mode: ${useDatabase ? "PostgreSQL Database" : "In-Memory"}`);
+console.log(`Storage mode: ${useDatabase ? "SQLite Database" : "In-Memory"}`);

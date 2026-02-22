@@ -1,12 +1,10 @@
 import { type User, type InsertUser, type SafetyPlan, type InsertSafetyPlan, type UserPreferences, type InsertUserPreferences, type ReportList, type InsertReportList, type AuditLog, type InsertAuditLog, users, safetyPlans, userPreferences, reportList, auditLogs, permits, type Permit, type InsertPermit, craneInspections, type CraneInspection, type InsertCraneInspection, draegerCalibrations, type DraegerCalibration, type InsertDraegerCalibration, incidents, type Incident, type InsertIncident, documents, type Document, type InsertDocument } from "@shared/schema";
 import { randomUUID } from "crypto";
-import { getDb } from "./db";
-// DatabaseStorage calls getDb() lazily — only when USE_DATABASE=true
-const db = (() => {
-  if (process.env.USE_DATABASE === "true") return getDb();
-  return null as any; // MemStorage is used instead; db will never be called
-})();
 import { eq, desc } from "drizzle-orm";
+
+// db handle is set lazily inside DatabaseStorage constructor via dynamic import
+// so that better-sqlite3 native bindings are never loaded when using MemStorage
+let db: any = null;
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -610,6 +608,13 @@ export class MemStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  constructor() {
+    // Dynamic require so that better-sqlite3 native bindings are only loaded
+    // when DatabaseStorage is actually instantiated (USE_DATABASE=true).
+    const { getDb } = require("./db") as typeof import("./db");
+    db = getDb();
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;

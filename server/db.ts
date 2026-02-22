@@ -1,24 +1,36 @@
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "@shared/schema";
 
-// Lazy-initialize the database only when USE_DATABASE=true.
-// This avoids loading the native better-sqlite3 bindings when running
-// in environments that don't support them (e.g. serverless sandboxes).
-let _db: BetterSQLite3Database<typeof schema> | null = null;
+// In the v0 sandbox, native modules like better-sqlite3 cannot be compiled.
+// The application defaults to MemStorage (in-memory) which does not need a
+// database handle at all.  We only attempt to load the native driver when
+// USE_DATABASE is explicitly set to "true" — which should only happen in
+// environments where better-sqlite3's native bindings are available.
 
-export function getDb(): BetterSQLite3Database<typeof schema> {
+let _db: any = null;
+
+export function getDb() {
   if (!_db) {
-    // Dynamic require so the native module is only loaded on demand
-    const { drizzle } = require("drizzle-orm/better-sqlite3") as typeof import("drizzle-orm/better-sqlite3");
-    const Database = require("better-sqlite3") as typeof import("better-sqlite3").default;
-    const dbPath = process.env.NODE_ENV === "production" ? "/tmp/database.db" : "./database.db";
-    const sqlite = new Database(dbPath);
-    _db = drizzle(sqlite, { schema });
+    try {
+      const { drizzle } = require("drizzle-orm/better-sqlite3");
+      const Database = require("better-sqlite3");
+      const dbPath =
+        process.env.NODE_ENV === "production"
+          ? "/tmp/database.db"
+          : "./database.db";
+      const sqlite = new Database(dbPath);
+      _db = drizzle(sqlite, { schema });
+    } catch (err) {
+      console.error(
+        "Failed to load better-sqlite3 native bindings. Falling back to in-memory storage.",
+        (err as Error).message
+      );
+      _db = null;
+    }
   }
   return _db;
 }
 
-// For backwards-compat: export db as null — callers that truly need it
-// should use getDb() (DatabaseStorage) or guard on USE_DATABASE.
-export const db: BetterSQLite3Database<typeof schema> | null =
+// Only eagerly initialise when USE_DATABASE is true.
+// When false / unset the app uses MemStorage so db is never touched.
+export const db: any =
   process.env.USE_DATABASE === "true" ? getDb() : null;

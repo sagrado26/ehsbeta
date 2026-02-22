@@ -1,8 +1,11 @@
 import { type User, type InsertUser, type SafetyPlan, type InsertSafetyPlan, type UserPreferences, type InsertUserPreferences, type ReportList, type InsertReportList, type AuditLog, type InsertAuditLog, users, safetyPlans, userPreferences, reportList, auditLogs, permits, type Permit, type InsertPermit, craneInspections, type CraneInspection, type InsertCraneInspection, draegerCalibrations, type DraegerCalibration, type InsertDraegerCalibration, incidents, type Incident, type InsertIncident, documents, type Document, type InsertDocument } from "@shared/schema";
 import { randomUUID } from "crypto";
-import { db as _db } from "./db";
-// DatabaseStorage is only instantiated when USE_DATABASE=true, so db is guaranteed non-null
-const db = _db!;
+import { getDb } from "./db";
+// DatabaseStorage calls getDb() lazily — only when USE_DATABASE=true
+const db = (() => {
+  if (process.env.USE_DATABASE === "true") return getDb();
+  return null as any; // MemStorage is used instead; db will never be called
+})();
 import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {

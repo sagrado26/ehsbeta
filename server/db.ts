@@ -1,9 +1,10 @@
-// Database handle placeholder.
-// In this environment we use MemStorage (in-memory) which does not require
-// any external database driver.
+// This module provides a database stub.
+// The application uses MemStorage (in-memory) by default.
+// No external database driver is loaded.
+console.log("[v0] db.ts loaded — using in-memory storage, no SQLite driver");
+
 export const db: any = null;
 
-// Kept for backward compatibility with imports that reference getDb.
-export function getDb() {
+export function getDb(): any {
   return null;
 }

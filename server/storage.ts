@@ -1,9 +1,10 @@
 import { type User, type InsertUser, type SafetyPlan, type InsertSafetyPlan, type UserPreferences, type InsertUserPreferences, type ReportList, type InsertReportList, type AuditLog, type InsertAuditLog, users, safetyPlans, userPreferences, reportList, auditLogs, permits, type Permit, type InsertPermit, craneInspections, type CraneInspection, type InsertCraneInspection, draegerCalibrations, type DraegerCalibration, type InsertDraegerCalibration, incidents, type Incident, type InsertIncident, documents, type Document, type InsertDocument } from "@shared/schema";
 import { randomUUID } from "crypto";
-import { db as _db } from "./db";
-// DatabaseStorage is only instantiated when USE_DATABASE=true, so db is guaranteed non-null
-const db = _db!;
 import { eq, desc } from "drizzle-orm";
+
+// db handle is set lazily inside DatabaseStorage constructor via dynamic import
+// so that better-sqlite3 native bindings are never loaded when using MemStorage
+let db: any = null;
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -607,6 +608,13 @@ export class MemStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  constructor() {
+    // Dynamic require so that better-sqlite3 native bindings are only loaded
+    // when DatabaseStorage is actually instantiated (USE_DATABASE=true).
+    const { getDb } = require("./db") as typeof import("./db");
+    db = getDb();
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
@@ -763,8 +771,8 @@ export class DatabaseStorage implements IStorage {
     return p;
   }
   async deletePermit(id: number) {
-    const result = await db.delete(permits).where(eq(permits.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const result = await db.delete(permits).where(eq(permits.id, id)).returning();
+    return result.length > 0;
   }
 
   // ── Crane Inspections ──────────────────────────────────────────────────────
@@ -784,8 +792,8 @@ export class DatabaseStorage implements IStorage {
     return r;
   }
   async deleteCraneInspection(id: number) {
-    const result = await db.delete(craneInspections).where(eq(craneInspections.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const result = await db.delete(craneInspections).where(eq(craneInspections.id, id)).returning();
+    return result.length > 0;
   }
 
   // ── Draeger Calibrations ───────────────────────────────────────────────────
@@ -805,8 +813,8 @@ export class DatabaseStorage implements IStorage {
     return r;
   }
   async deleteDraegerCalibration(id: number) {
-    const result = await db.delete(draegerCalibrations).where(eq(draegerCalibrations.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const result = await db.delete(draegerCalibrations).where(eq(draegerCalibrations.id, id)).returning();
+    return result.length > 0;
   }
 
   // ── Incidents ──────────────────────────────────────────────────────────────
@@ -826,8 +834,8 @@ export class DatabaseStorage implements IStorage {
     return r;
   }
   async deleteIncident(id: number) {
-    const result = await db.delete(incidents).where(eq(incidents.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const result = await db.delete(incidents).where(eq(incidents.id, id)).returning();
+    return result.length > 0;
   }
 
   // ── Documents ──────────────────────────────────────────────────────────────
@@ -847,12 +855,12 @@ export class DatabaseStorage implements IStorage {
     return r;
   }
   async deleteDocument(id: number) {
-    const result = await db.delete(documents).where(eq(documents.id, id));
-    return (result.rowCount ?? 0) > 0;
+    const result = await db.delete(documents).where(eq(documents.id, id)).returning();
+    return result.length > 0;
   }
 }
 
 const useDatabase = process.env.USE_DATABASE === "true";
 export const storage: IStorage = useDatabase ? new DatabaseStorage() : new MemStorage();
 
-console.log(`Storage mode: ${useDatabase ? "PostgreSQL Database" : "In-Memory"}`);
+console.log(`Storage mode: ${useDatabase ? "SQLite Database" : "In-Memory"}`);

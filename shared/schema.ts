@@ -1,5 +1,4 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, jsonb, timestamp, serial, integer } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -7,8 +6,8 @@ import { z } from "zod";
 export type Assessment = { severity: number; likelihood: number; mitigation: string };
 
 // Users table for authentication
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
 });
@@ -18,8 +17,8 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 // Safety Plans table - comprehensive pre-task plan
-export const safetyPlans = pgTable("safety_plans", {
-  id: serial("id").primaryKey(),
+export const safetyPlans = sqliteTable("safety_plans", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   group: text("group").notNull(),
   taskName: text("task_name").notNull(),
   date: text("date").notNull(),
@@ -40,15 +39,15 @@ export const safetyPlans = pgTable("safety_plans", {
   q9_otherConcerns: text("q9_other_concerns").notNull(),
   q10_headInjury: text("q10_head_injury").notNull(),
   q11_otherPPE: text("q11_other_ppe").notNull(),
-  hazards: jsonb("hazards").$type<string[]>().default([]),
-  assessments: jsonb("assessments").$type<Record<string, Assessment>>().default({}),
+  hazards: text("hazards", { mode: "json" }).$type<string[]>().default([]),
+  assessments: text("assessments", { mode: "json" }).$type<Record<string, Assessment>>().default({}),
   leadName: text("lead_name").notNull(),
   approverName: text("approver_name"),
-  engineers: jsonb("engineers").$type<string[]>().default([]),
+  engineers: text("engineers", { mode: "json" }).$type<string[]>().default([]),
   comments: text("comments"),
   status: text("status").notNull().default("pending"),
   shareToken: text("share_token"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 export const insertSafetyPlanSchema = createInsertSchema(safetyPlans).omit({
@@ -60,16 +59,16 @@ export type SafetyPlan = typeof safetyPlans.$inferSelect;
 export type InsertSafetyPlan = z.infer<typeof insertSafetyPlanSchema>;
 
 // User Preferences table for storing user settings
-export const userPreferences = pgTable("user_preferences", {
-  id: serial("id").primaryKey(),
+export const userPreferences = sqliteTable("user_preferences", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull().default("default"),
   system: text("system").notNull().default("Others"),
   group: text("group").notNull().default("Europe"),
   site: text("site").notNull().default("F34 Intel Ireland"),
   isFirstTime: text("is_first_time").notNull().default("true"),
   role: text("role").notNull().default("user"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
@@ -139,16 +138,16 @@ export type ApprovalInfo = {
 };
 
 // Report List table - comprehensive JSON report of each submission
-export const reportList = pgTable("report_list", {
-  id: serial("id").primaryKey(),
+export const reportList = sqliteTable("report_list", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   safetyPlanId: integer("safety_plan_id").notNull(),
   versionId: text("version_id").notNull(),
-  jobDetails: jsonb("job_details").$type<JobDetailsReport>().notNull(),
-  safetyRiskAssessment: jsonb("safety_risk_assessment").$type<SafetyRiskReport>().notNull(),
-  srbInfo: jsonb("srb_info").$type<SRBInfo>().notNull(),
-  approvalInfo: jsonb("approval_info").$type<ApprovalInfo>().notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  jobDetails: text("job_details", { mode: "json" }).$type<JobDetailsReport>().notNull(),
+  safetyRiskAssessment: text("safety_risk_assessment", { mode: "json" }).$type<SafetyRiskReport>().notNull(),
+  srbInfo: text("srb_info", { mode: "json" }).$type<SRBInfo>().notNull(),
+  approvalInfo: text("approval_info", { mode: "json" }).$type<ApprovalInfo>().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 export const insertReportListSchema = createInsertSchema(reportList).omit({
@@ -161,16 +160,16 @@ export type ReportList = typeof reportList.$inferSelect;
 export type InsertReportList = z.infer<typeof insertReportListSchema>;
 
 // Audit Log table - tracks all actions on safety plans
-export const auditLogs = pgTable("audit_logs", {
-  id: serial("id").primaryKey(),
+export const auditLogs = sqliteTable("audit_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   safetyPlanId: integer("safety_plan_id").notNull(),
   action: text("action").notNull(),
   performedBy: text("performed_by").notNull(),
   previousStatus: text("previous_status"),
   newStatus: text("new_status"),
   comments: text("comments"),
-  changes: jsonb("changes").$type<Record<string, { old: unknown; new: unknown }>>(),
-  createdAt: timestamp("created_at").defaultNow(),
+  changes: text("changes", { mode: "json" }).$type<Record<string, { old: unknown; new: unknown }>>(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
@@ -182,8 +181,8 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 
 // ─── Permits ───────────────────────────────────────────────────────────────
-export const permits = pgTable("permits", {
-  id: serial("id").primaryKey(),
+export const permits = sqliteTable("permits", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   date: text("date").notNull(),
   submitter: text("submitter").notNull(),
   manager: text("manager").notNull(),
@@ -197,7 +196,7 @@ export const permits = pgTable("permits", {
   spq5: text("spq5").notNull().default("no"),
   authorityName: text("authority_name").notNull().default(""),
   status: text("status").notNull().default("draft"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 export const insertPermitSchema = createInsertSchema(permits).omit({ id: true, createdAt: true });
@@ -205,8 +204,8 @@ export type Permit = typeof permits.$inferSelect;
 export type InsertPermit = z.infer<typeof insertPermitSchema>;
 
 // ─── Crane Inspections ──────────────────────────────────────────────────────
-export const craneInspections = pgTable("crane_inspections", {
-  id: serial("id").primaryKey(),
+export const craneInspections = sqliteTable("crane_inspections", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   inspector: text("inspector").notNull(),
   buddyInspector: text("buddy_inspector").notNull(),
   bay: text("bay").notNull(),
@@ -216,7 +215,7 @@ export const craneInspections = pgTable("crane_inspections", {
   q2: text("q2").notNull().default("no"),
   q3: text("q3").notNull().default("no"),
   status: text("status").notNull().default("draft"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 export const insertCraneInspectionSchema = createInsertSchema(craneInspections).omit({ id: true, createdAt: true });
@@ -224,14 +223,14 @@ export type CraneInspection = typeof craneInspections.$inferSelect;
 export type InsertCraneInspection = z.infer<typeof insertCraneInspectionSchema>;
 
 // ─── Draeger Calibrations ───────────────────────────────────────────────────
-export const draegerCalibrations = pgTable("draeger_calibrations", {
-  id: serial("id").primaryKey(),
+export const draegerCalibrations = sqliteTable("draeger_calibrations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   nc12: text("nc_12").notNull(),
   serialNumber: text("serial_number").notNull(),
   calibrationDate: text("calibration_date").notNull(),
   calibratedBy: text("calibrated_by").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 export const insertDraegerCalibrationSchema = createInsertSchema(draegerCalibrations).omit({ id: true, createdAt: true, updatedAt: true });
@@ -239,8 +238,8 @@ export type DraegerCalibration = typeof draegerCalibrations.$inferSelect;
 export type InsertDraegerCalibration = z.infer<typeof insertDraegerCalibrationSchema>;
 
 // ─── Incidents ──────────────────────────────────────────────────────────────
-export const incidents = pgTable("incidents", {
-  id: serial("id").primaryKey(),
+export const incidents = sqliteTable("incidents", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   date: text("date").notNull(),
   type: text("type").notNull(),
   location: text("location").notNull(),
@@ -248,7 +247,7 @@ export const incidents = pgTable("incidents", {
   severity: integer("severity").notNull().default(1),
   assignedInvestigator: text("assigned_investigator").notNull(),
   status: text("status").notNull().default("open"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 export const insertIncidentSchema = createInsertSchema(incidents).omit({ id: true, createdAt: true });
@@ -256,13 +255,13 @@ export type Incident = typeof incidents.$inferSelect;
 export type InsertIncident = z.infer<typeof insertIncidentSchema>;
 
 // ─── Documents ──────────────────────────────────────────────────────────────
-export const documents = pgTable("documents", {
-  id: serial("id").primaryKey(),
+export const documents = sqliteTable("documents", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
   category: text("category").notNull(),
   description: text("description").notNull(),
   sharepointUrl: text("sharepoint_url").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 export const insertDocumentSchema = createInsertSchema(documents).omit({ id: true, createdAt: true });

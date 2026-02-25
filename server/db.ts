@@ -1,7 +1,10 @@
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import Database from "better-sqlite3";
-import * as schema from "@shared/schema";
+// This module provides a database stub.
+// The application uses MemStorage (in-memory) by default.
+// No external database driver is loaded.
+console.log("[v0] db.ts loaded — using in-memory storage, no SQLite driver");
 
-const dbPath = process.env.NODE_ENV === "production" ? "/tmp/database.db" : "./database.db";
-const sqlite = new Database(dbPath);
-export const db = drizzle(sqlite, { schema });
+export const db: any = null;
+
+export function getDb(): any {
+  return null;
+}
